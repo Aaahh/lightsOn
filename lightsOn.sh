@@ -56,7 +56,7 @@ app_checks=1
 # Modify these variables if you want this script to detect if MPV, Mplayer,
 # VLC, Minitube, Totem or a web browser Flash/HTML5 Video.
 mplayer_detection=1
-mpv_detection=1
+mpv_detection=0
 vlc_detection=1
 totem_detection=1
 firefox_flash_detection=1
@@ -84,14 +84,14 @@ output_detection=('HDMI-0')
 
 # DPMS settings in seconds, 600 seconds = 10 minutes.
 # If you don't want to change DMPS settings, modify DPMS_Control to 0.
-DPMS_Control=1
+DPMS_Control=0
 DPMS_StandbyTime=600
 DPMS_SuspendTime=600
 DPMS_OffTime=600
 
 # X11 Screen Saver Extension settings in seconds, 600 seconds = 10 minutes.
 # If you don't want to change these settings, modify X11ScreenSaver_Control to 0.
-X11ScreenSaver_Control=1
+X11ScreenSaver_Control=0
 X11ScreenSaver_Timeout=600
 
 # YOU SHOULD NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
@@ -472,38 +472,6 @@ checkOutputs()
     done
 }
 
-_sleep()
-{
-    delay_this_loop=0
-    if [ $dynamicDelay -eq 0 ]; then
-        log "sleeping for $delay"
-        log "--------------- loop done! ---------------"
-	sleep $delay
-    else
-        if [ -f /sys/class/power_supply/AC/online ]; then
-            if [ $gsettings_present == 1 ]; then
-                if [ "$(cat /sys/class/power_supply/AC/online)" == "1" ]; then
-                    system_sleep_delay=$(gsettings get org.gnome.settings-daemon.plugins.power sleep-display-ac 2>/dev/null)
-                else
-                    system_sleep_delay=$(gsettings get org.gnome.settings-daemon.plugins.power sleep-display-battery 2>/dev/null)
-                fi
-            fi
-        fi
-        if [ "$(echo $system_sleep_delay | egrep -c "^[0-9]+$")" == "1" ]; then
-            if [ $system_sleep_delay -le $(($default_sleep_delay+5)) ]; then
-                sleep_delay=$default_sleep_delay
-            else
-                sleep_delay=$(($system_sleep_delay-5))
-            fi
-        else
-            sleep_delay=$default_sleep_delay
-        fi
-        log "sleeping for $sleep_delay (system idle timeout is $system_sleep_delay)"
-        log "--------------- loop done! ---------------"
-	sleep $sleep_delay
-    fi
-}
-
 delay=$1
 dynamicDelay=0
 
@@ -521,12 +489,8 @@ if [[ $1 = *[^0-9]* ]]; then
     exit 1
 fi
 
-while true
-do
-    checkDelayProgs
-    checkOutputs
-    checkFullscreen
-    _sleep $delay
-done
+checkDelayProgs
+checkOutputs
+checkFullscreen
 
 exit 0
